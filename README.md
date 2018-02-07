@@ -1,2 +1,2 @@
-# legendary-giggle
-IRCd in C++ with Boost
+# IRCd 
+in C++ with Boost
