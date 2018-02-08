@@ -25,7 +25,7 @@ void Session::read() {
 void Session::handleRead(const boost::system::error_code& error, std::size_t bytes) {
     if(error) {
             if(error == boost::asio::error::eof) { 
-                std::cout << "[Server] " << ip() << "user exit" << std::endl;
+                std::cout << "[Server] " << ip() << ": user exit" << std::endl;
                 mSocket.close();
             } else 
                 std::cerr << "[Server] Error (" << __LINE__ <<") : " << error.message() << " at " << ip() << std::endl;
@@ -56,7 +56,7 @@ void Session::sendAsServer(const std::string& message) {
     send(Config::FormatServerName + message);
 }
 
-tcp::socket& Session::socket() { return mSocket; }
+boost::asio::ip::tcp::socket& Session::socket() { return mSocket; }
 
 std::string Session::ip() const {
     return mSocket.remote_endpoint().address().to_string();

@@ -37,7 +37,7 @@ void Channel::removeUser(User* user) {
 
 bool Channel::hasUser(User* user) { return ((mUsers.find(user)) != mUsers.end()); }
 
-bool Channel::isOperator(User* user { return ((mOperators.find(user)) != mOperators.end()); }
+bool Channel::isOperator(User* user) { return ((mOperators.find(user)) != mOperators.end()); }
 
 void Channel::broadcast(const std::string& message) {
     std::cout << "[" << mName << "] broadcast : " << message << std::endl;

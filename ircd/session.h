@@ -25,7 +25,7 @@ public:
 
         void send(const std::string& message);
 		void close();
-		tcp::socket& socket();
+		boost::asio::ip::tcp::socket& socket();
         std::string ip() const;
 
 private:

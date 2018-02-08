@@ -1,4 +1,6 @@
 #pragma once
+#pragma warning(push) 
+#pragma warning(disable:4996)
 
 #include "user.h"
 #include <string>
@@ -11,3 +13,4 @@ public:
 	Parser() = delete;
 };
 
+#pragma warning(pop) 

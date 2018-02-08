@@ -85,7 +85,7 @@ void User::cmdQuit() {
 			+ (*it)->name() + " : Leave the channel" 
 			+ Config::EOFMessage);
         (*it)->removeUser(this);
-        mChannels.erase((*it));
+        //mChannels.erase((*it));
     }
     Mainframe::instance()->removeUser(mNickName);
     Mainframe::instance()->updateChannels();

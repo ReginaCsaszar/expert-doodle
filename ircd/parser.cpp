@@ -2,53 +2,54 @@
 #include "server.h"
 #include "mainframe.h"
 
-
-
 void Parser::parse(const std::string& message, User* user) {
-    StrVec  split;
-    boost::split(split, message, boost::is_any_of(" \t"), boost::token_compress_on );
-    boost::to_upper(split[0]);
+	StrVec  split;
+	boost::split(split, message, boost::is_any_of(" \t"), boost::token_compress_on);
+	boost::to_upper(split[0]);
 
-    if(split[0] == "NICK") {
-        if(split.size() < 2) {
-            user->session()->sendAsServer(ToString(Response::Error::ERR_NONICKNAMEGIVEN) 
-																										+ " "
-																										+ user->nick() 
-																										+ " No nickname given !" 
-																										+ Config::EOFMessage);
-        }
+	if (split[0] == "NICK") {
+		if (split.size() < 2) {
+			user->session()->sendAsServer(ToString(Response::Error::ERR_NONICKNAMEGIVEN) + " "
+				+ user->nick() + " No nickname given" + Config::EOFMessage);
+			return;
+		}
 
-        if(split[1][0] == '#' || split[1][0] == '&' || split[1][0] == '!' || split[1][0] == '@' || split[1][0] == ':') {
-            user->session()->sendAsServer(ToString(Response::Error::ERR_ERRONEUSNICKNAME) 
-				+ " " + user->nick() 
-				+ " Wrong nickname format !" 
+		if (split[1][0] == '#' || split[1][0] == '&' || split[1][0] == '!' || split[1][0] == '@' || split[1][0] == ':') {
+			user->session()->sendAsServer(ToString(Response::Error::ERR_ERRONEUSNICKNAME)
+				+ " " + user->nick() + " Wrong nickname format " + Config::EOFMessage);
+			return;
+		}
+		
+		user->cmdNick(split[1]);
+		user->session()->sendAsServer(ToString(Response::Reply::RPL_NAMREPLY) + " Username changed: " + user->nick()	+ Config::EOFMessage);
+
+	}
+
+	else if (split[0] == "USER") {
+		if (split.size() < 5) {
+			user->session()->sendAsServer(ToString(Response::Error::ERR_NEEDMOREPARAMS)
 				+ Config::EOFMessage);
-            return;
-        }
-        user->cmdNick(split[1]);
-    
-	} else if(split[0] == "USER") {
-        if(split.size() < 5) {
-            user->session()->sendAsServer(ToString(Response::Error::ERR_NEEDMOREPARAMS) 
-				+ Config::EOFMessage);
-            return;
-        }
-        std::string realname = split[4];
-        for(unsigned int i = 5; i < split.size(); ++i) {
-            realname += " ";
-            realname += split[i];
-        }
-        realname = realname.substr(1);
-        user->cmdUser(split[2], realname);
-    
-	} else if(split[0] == "QUIT") { 
-		user->cmdQuit(); 
-	
-	} else if(split[0] == "JOIN") {
-        if(split.size() < 2) return;
-        if((split[1][0] != '#' && split[1][0] != '&') || split[1].size() < 2) return;
+			return;
+		}
+		std::string realname = split[4];
+		for (unsigned int i = 5; i < split.size(); ++i) {
+			realname += " ";
+			realname += split[i];
+		}
+		realname = realname.substr(1);
+		user->cmdUser(split[2], realname);
 
-        Channel* chan = Mainframe::instance()->getChannelByName(split[1]);
+	}
+
+	else if (split[0] == "QUIT") {
+		user->cmdQuit();
+	}
+
+	else if (split[0] == "JOIN") {
+		if (split.size() < 2) return;
+		if ((split[1][0] != '#' && split[1][0] != '&') || split[1].size() < 2) return;
+
+		Channel* chan = Mainframe::instance()->getChannelByName(split[1]);
 		if (chan) {
 			if (!chan->hasPass() || (split.size() >= 3 && split[2] == chan->password())) {
 				if (!chan->limited() || !chan->full()) {
@@ -67,117 +68,134 @@ void Parser::parse(const std::string& message, User* user) {
 					+ " :Cannot join channel (+k)"
 					+ Config::EOFMessage);
 			}
-		} else {
-            chan = new Channel(user, split[1]);
-            if(chan) {
-                user->cmdJoin(chan);
-                Mainframe::instance()->addChannel(chan);
-            }
-        }
-    
-	} else if(split[0] == "PART") {
-        if(split.size() < 2) return;
+		}
+		else {
+			chan = new Channel(user, split[1]);
+			if (chan) {
+				user->cmdJoin(chan);
+				Mainframe::instance()->addChannel(chan);
+			}
+		}
+
+	}
+
+	else if (split[0] == "PART") {
+		if (split.size() < 2) return;
 		Channel* chan = Mainframe::instance()->getChannelByName(split[1]);
-         if(chan) user->cmdPart(chan);
-    
-	} else if(split[0] == "TOPIC") {
-        if(split.size() >= 2) {
-            Channel* chan = Mainframe::instance()->getChannelByName(split[1]);
-            if(chan) {
+		if (chan) user->cmdPart(chan);
+
+	}
+
+	else if (split[0] == "TOPIC") {
+		if (split.size() >= 2) {
+			Channel* chan = Mainframe::instance()->getChannelByName(split[1]);
+			if (chan) {
 				if (split.size() == 2) {
 					if (chan->topic().empty()) {
 						user->session()->sendAsServer(ToString(Response::Reply::RPL_NOTOPIC)
 							+ " " + split[1]
 							+ " :No topic is set !"
 							+ Config::EOFMessage);
-					} else {
+					}
+					else {
 						user->session()->sendAsServer(ToString(Response::Reply::RPL_TOPIC)
 							+ " " + user->nick()
 							+ " " + split[1]
 							+ " :" + chan->topic()
 							+ Config::EOFMessage);
 					}
-				} else if(split.size() >= 3) {
-                    std::string topic;
-                    for(unsigned int i = 2; i < split.size(); ++i)  topic += split[i] + " ";
-                    topic = topic.substr(1);
-                    if(chan->isOperator(user)) {
-                        chan->cmdTopic(topic);
-                        chan->broadcast(user->messageHeader() 
-							+ "TOPIC " 
-							+ chan->name() 
-							+ " :" + chan->topic() 
+				}
+				else if (split.size() >= 3) {
+					std::string topic;
+					for (unsigned int i = 2; i < split.size(); ++i)  topic += split[i] + " ";
+					topic = topic.substr(1);
+					if (chan->isOperator(user)) {
+						chan->cmdTopic(topic);
+						chan->broadcast(user->messageHeader()
+							+ "TOPIC "
+							+ chan->name()
+							+ " :" + chan->topic()
 							+ Config::EOFMessage);
-                    }
-                }
-            }
-        }
-    
-	} else if(split[0] == "LIST") {
-        user->session()->sendAsServer(ToString(Response::Reply::RPL_LISTSTART) 
-			+ " " + user->nick() 
-			+ " Channel :Users Name" 
+					}
+				}
+			}
+		}
+
+	}
+
+	else if (split[0] == "LIST") {
+		user->session()->sendAsServer(ToString(Response::Reply::RPL_LISTSTART)
+			+ " " + user->nick()
+			+ " Channel :Users Name"
 			+ Config::EOFMessage);
-        ChannelMap channels = Mainframe::instance()->channels();
-        ChannelMap::iterator it = channels.begin();
-        for(; it != channels.end(); ++it) {
-            user->session()->sendAsServer(ToString(Response::Reply::RPL_LIST) +  " " 
-				+ user->nick() + " " 
-				+ it->first + " " 
-				+ ToString(it->second->userCount()) + " :" 
-				+ it->second->topic() 
+		ChannelMap channels = Mainframe::instance()->channels();
+		ChannelMap::iterator it = channels.begin();
+		for (; it != channels.end(); ++it) {
+			user->session()->sendAsServer(ToString(Response::Reply::RPL_LIST) + " "
+				+ user->nick() + " "
+				+ it->first + " "
+				+ ToString(it->second->userCount()) + " :"
+				+ it->second->topic()
 				+ Config::EOFMessage);
-        }
-        user->session()->sendAsServer(ToString(Response::Reply::RPL_LISTEND) + " " 
-			+ user->nick() 
-			+ " :End of /LIST" 
+		}
+		user->session()->sendAsServer(ToString(Response::Reply::RPL_LISTEND) + " "
+			+ user->nick()
+			+ " :End of /LIST"
 			+ Config::EOFMessage);
-    
-	} else if(split[0] == "PRIVMSG") {
-        if(split.size() < 3) return;
+
+	}
+
+	else if (split[0] == "PRIVMSG") {
+		if (split.size() < 3) return;
 		std::string message = "";
-        for(unsigned int i = 2; i < split.size(); ++i) { message += split[i] + " "; }
+		for (unsigned int i = 2; i < split.size(); ++i) { message += split[i] + " "; }
 
-        if(split[1][0] == '#' || split[1][0] == '&') {
-            Channel* chan = Mainframe::instance()->getChannelByName(split[1]);
-            if(chan) {
-                chan->broadcast(":" 
-					+ user->nick() 
-					+ " PRIVMSG " 
-					+ chan->name() + " " 
+		if (split[1][0] == '#' || split[1][0] == '&') {
+			Channel* chan = Mainframe::instance()->getChannelByName(split[1]);
+			if (chan) {
+				chan->broadcast(":"
+					+ user->nick()
+					+ " PRIVMSG "
+					+ chan->name() + " "
 					+ message + Config::EOFMessage);
-            }
-        } else {
-            User* target = Mainframe::instance()->getUserByName(split[1]);
-            if(target) {
-                target->session()->send(":" + user->nick() 
-					+ " PRIVMSG " 
-					+ target->nick() + " " 
-					+ message 
+			}
+		}
+		else {
+			User* target = Mainframe::instance()->getUserByName(split[1]);
+			if (target) {
+				target->session()->send(":" + user->nick()
+					+ " PRIVMSG "
+					+ target->nick() + " "
+					+ message
 					+ Config::EOFMessage);
-            }
-        }
-    } else if(split[0] == "KICK") {
-        if(split.size() < 3) return;
+			}
+		}
+	}
 
-        Channel* chan = Mainframe::instance()->getChannelByName(split[1]); 
-        User*  victim = Mainframe::instance()->getUserByName(split[2]); 
-        std::string reason = "";
-        if(chan && victim) {
-            for(unsigned int i = 3; i < split.size(); ++i) {
-                reason += split[i] + " ";
-            }
-            if(chan->isOperator(user) && chan->hasUser(victim) && !chan->isOperator(victim)) {
-                user->cmdKick(victim, reason, chan);
-                victim->cmdPart(chan);
-            }
-        }
-    
-	} else if(split[0] == "PING") { user->cmdPing();
-	
-	} else
+	else if (split[0] == "KICK") {
+		if (split.size() < 3) return;
+
+		Channel* chan = Mainframe::instance()->getChannelByName(split[1]);
+		User*  victim = Mainframe::instance()->getUserByName(split[2]);
+		std::string reason = "";
+		if (chan && victim) {
+			for (unsigned int i = 3; i < split.size(); ++i) {
+				reason += split[i] + " ";
+			}
+			if (chan->isOperator(user) && chan->hasUser(victim) && !chan->isOperator(victim)) {
+				user->cmdKick(victim, reason, chan);
+				victim->cmdPart(chan);
+			}
+		}
+
+	}
+
+	else if (split[0] == "PING") { user->cmdPing(); }
+
+	else {
 		user->session()->sendAsServer(ToString(Response::Error::ERR_UNKNOWNCOMMAND)
 			+ Config::EOFMessage);
+	}
 }
 	
 	/*} else if (split[0] == "MODE") {
