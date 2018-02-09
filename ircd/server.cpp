@@ -7,7 +7,10 @@ Server::Server(boost::asio::io_service& io_service)
     mAcceptor.listen();
 }
 
-void Server::start() { startAccept(); }
+void Server::start() { 
+	std::cout << "[Server] Server started "  << std::endl;
+	startAccept(); 
+}
 
 void Server::startAccept() {
     Session::pointer newclient = Session::create(mAcceptor.get_io_service());

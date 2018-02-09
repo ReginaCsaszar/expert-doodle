@@ -37,7 +37,7 @@ public:
 		Mainframe() = default;
         ~Mainframe(); 
         Mainframe(const Mainframe&);
-        Mainframe& operator=(Mainframe&);
+		Mainframe& operator=(Mainframe&) {};
 
         void removeAllChannels();
 

@@ -8,7 +8,12 @@ Session::pointer Session::create(boost::asio::io_service& io_service) {
     return Session::pointer(new Session(io_service));
 }
 
-void Session::start() { read(); }
+void Session::start() { 
+	sendAsServer(" Welcome " + Config::EOFMessage);
+	sendAsServer(" Checking ident " + Config::EOFMessage);
+	sendAsServer(" No identd(auth) response " + Config::EOFMessage);
+	read(); 
+}
 
 void Session::close() {
      mSocket.cancel();
