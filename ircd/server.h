@@ -12,11 +12,12 @@ class Server {
     public:
    
         Server(boost::asio::io_service& io_service);
-        void    start();
+        void start();
 
     private:
         
-        void    startAccept();
-        void    handleAccept(Session::pointer newclient, const boost::system::error_code& error);
-        tcp::acceptor       mAcceptor; ///< Acceptor
+        void startAccept();
+        void handleAccept(SessionPtr newclient, const boost::system::error_code& error);
+        
+		tcp::acceptor mAcceptor; 
 };

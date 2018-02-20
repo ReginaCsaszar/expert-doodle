@@ -1,10 +1,13 @@
 #include "mainframe.h"
 
-Mainframe *Mainframe::mInstance = NULL;
+std::unique_ptr<Mainframe> Mainframe::mInstance;;
+std::once_flag Mainframe::onceFlag;
 
-Mainframe* Mainframe::instance() {
-    if(!mInstance) mInstance = new Mainframe();
-    return mInstance;
+Mainframe& Mainframe::instance() {
+	std::call_once(Mainframe::onceFlag, []() {
+		mInstance.reset(new Mainframe);
+	});
+	return *(mInstance.get());
 }
 
 Mainframe::~Mainframe() {
@@ -22,7 +25,7 @@ bool Mainframe::doesNicknameExists(const std::string& nick) {
     return mUsers.count(nick);
 }
 
-bool Mainframe::addUser(User* user) {
+bool Mainframe::addUser(UserPtr user) {
     if(doesNicknameExists(user->nick())) return false;
     mUsers[user->nick()] = user;
     return true;
@@ -32,7 +35,7 @@ bool Mainframe::changeNickname(const std::string& old, const std::string& recent
     if(doesNicknameExists(recent))    return false;
     if(!doesNicknameExists(old))    return false;
 
-    User* tmp = mUsers[old];
+	UserPtr tmp = mUsers[old];
     mUsers.erase(old);
     mUsers[recent] = tmp;
     return true;
@@ -40,7 +43,7 @@ bool Mainframe::changeNickname(const std::string& old, const std::string& recent
 
 void Mainframe::removeUser(const std::string& nick) { mUsers.erase(nick); }
 
-User* Mainframe::getUserByName(const std::string& nick) {
+UserPtr Mainframe::getUserByName(const std::string& nick) {
     if(! doesNicknameExists(nick) ) return NULL;
     return mUsers[nick];
 }

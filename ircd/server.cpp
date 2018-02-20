@@ -13,12 +13,12 @@ void Server::start() {
 }
 
 void Server::startAccept() {
-    Session::pointer newclient = Session::create(mAcceptor.get_io_service());
+    SessionPtr newclient = Session::create(mAcceptor.get_io_service());
     mAcceptor.async_accept(newclient->socket(),
                            boost::bind(&Server::handleAccept,   this,   newclient,  boost::asio::placeholders::error));
 }
 
-void Server::handleAccept(Session::pointer newclient, const boost::system::error_code& error) {
+void Server::handleAccept(SessionPtr newclient, const boost::system::error_code& error) {
     if(error) {
         std::cerr << "[Server] Error : " << error.message() << std::endl;
     } else {

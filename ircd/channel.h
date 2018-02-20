@@ -3,28 +3,29 @@
 #include <set>
 #include <string>
 #include "user.h"
+#include "session.h"
 
-typedef std::set<User*> UserSet; 
+typedef std::set<UserPtr> UserSet;
 
 class Channel {
     
 public:
 
-        Channel(User* creator, const std::string& name, const std::string& topic = "");
+        Channel(UserPtr creator, const std::string& name, const std::string& topic = "");
         ~Channel();
 
-        void cmdOPlus(User *user, User *victim);
-        void cmdOMinus(User *user);
+        void cmdOPlus(UserPtr user, UserPtr victim);
+        void cmdOMinus(UserPtr user);
         void cmdKPlus(const std::string& newPass);
         void cmdKMinus();
         void cmdLPlus(const std::string& newNbPlace);
         void cmdLMinus();
         void cmdTopic(const std::string& topic);
 
-        void addUser(User* user);
-        void removeUser(User* user);
-        bool hasUser(User* user);
-        bool isOperator(User* user);
+        void addUser(UserPtr user);
+        void removeUser(UserPtr user);
+        bool hasUser(UserPtr user);
+        bool isOperator(UserPtr user);
         void sendUserList();
         void sendWhoList();
         void broadcast(const std::string& message);

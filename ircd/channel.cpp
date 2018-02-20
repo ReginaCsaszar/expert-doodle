@@ -1,9 +1,8 @@
 #include "channel.h"
-#include "session.h"
 
 #include <iostream>
 
-Channel::Channel(User* creator, const std::string& name, const std::string& topic)
+Channel::Channel(UserPtr creator, const std::string& name, const std::string& topic)
 :   mName(name), mTopic(topic), mUsers(),  mOperators(),  mPassword(), 
 	mSlots(0), bPassword(false), bLimited(false)
 {
@@ -20,14 +19,14 @@ Channel::~Channel() {
     std::cout << "[" << mName << "] channel deleted" << std::endl;
 }
 
-void Channel::addUser(User* user) {
+void Channel::addUser(UserPtr user) {
     if(user) {
         mUsers.insert(user);
         sendUserList(); 
     }
 }
 
-void Channel::removeUser(User* user) {
+void Channel::removeUser(UserPtr user) {
     if(user) {
         mUsers.erase(user);
         mOperators.erase(user);
@@ -35,9 +34,9 @@ void Channel::removeUser(User* user) {
     }
 }
 
-bool Channel::hasUser(User* user) { return ((mUsers.find(user)) != mUsers.end()); }
+bool Channel::hasUser(UserPtr user) { return ((mUsers.find(user)) != mUsers.end()); }
 
-bool Channel::isOperator(User* user) { return ((mOperators.find(user)) != mOperators.end()); }
+bool Channel::isOperator(UserPtr user) { return ((mOperators.find(user)) != mOperators.end()); }
 
 void Channel::broadcast(const std::string& message) {
     std::cout << "[" << mName << "] broadcast : " << message << std::endl;
@@ -117,7 +116,7 @@ bool Channel::full() const { return !(mUsers.size() < mSlots); }
 
 bool Channel::limited() const { return bLimited; }
 
-void Channel::cmdOPlus(User *user, User *victim) {
+void Channel::cmdOPlus(UserPtr user, UserPtr victim) {
     if (this->hasUser(victim) && this->hasUser(user)) {
         if (this->isOperator(user)) {
             mOperators.insert(victim);
@@ -127,7 +126,7 @@ void Channel::cmdOPlus(User *user, User *victim) {
         user->session()->sendAsServer(ToString(Response::Error::ERR_NOTONCHANNEL) + Config::EOFMessage);
 }
 
-void Channel::cmdOMinus(User *user) {
+void Channel::cmdOMinus(UserPtr user) {
     if (this->isOperator(user)) {
         mOperators.erase(user);
         sendUserList();

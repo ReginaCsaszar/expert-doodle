@@ -9,7 +9,7 @@ class Parser {
     
 public:
 
-	static void parse(const std::string& message, User* user);
+	static void parse(const std::string& message, User::UserPtr user);
 	Parser() = delete;
 };
 

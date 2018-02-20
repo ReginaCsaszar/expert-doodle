@@ -2,10 +2,15 @@
 #include "parser.h"
 
 Session::Session(boost::asio::io_service& io_service)
-:   mUser(this), mSocket(io_service) {}
+:   mUser(new User(this)), mSocket(io_service)
+{}
 
-Session::pointer Session::create(boost::asio::io_service& io_service) {
-    return Session::pointer(new Session(io_service));
+SessionPtr Session::create(boost::asio::io_service& io_service) {
+    return SessionPtr(new Session(io_service));
+}
+
+SessionPtr Session::getPtr() {
+	return shared_from_this();
 }
 
 void Session::start() { 
@@ -41,9 +46,8 @@ void Session::handleRead(const boost::system::error_code& error, std::size_t byt
         std::istream istream(&mBuffer);
         std::getline(istream, message);
         message = message.substr(0, message.size()-1);
-		// just for see
         std::cout << "[" << ip() << "] : " << message << std::endl;
-        Parser::parse(message, &mUser);
+        Parser::parse(message, mUser);
         read();
     }
 }
@@ -54,7 +58,7 @@ void Session::send(const std::string& message) {
 }
 
 void Session::sendAsUser(const std::string& message) {
-    send(mUser.messageHeader() + message);
+	send(mUser->messageHeader() + message);
 }
 
 void Session::sendAsServer(const std::string& message) {

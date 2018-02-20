@@ -2,25 +2,26 @@
 #include "session.h"
 #include "mainframe.h"
 
-User::User(Session*     mysession)
-:   mSession(mysession), bSentUser(false), bSentNick(false), bSentMotd(false), bProperlyQuit(false) {}
+
+User::User(Session* mysession)
+:   mSession(mysession->shared_from_this()), bSentUser(false), bSentNick(false), bSentMotd(false), bProperlyQuit(false) {}
 
 User::~User() {
     if(!bProperlyQuit) {
         ChannelSet::iterator it = mChannels.begin();
         for(; it != mChannels.end(); ++it) {
-            (*it)->removeUser(this);
+            (*it)->removeUser(getPtr());
             (*it)->broadcast(messageHeader() + "PART " + (*it)->name() + " :Leave the channel" + Config::EOFMessage);
             mChannels.erase((*it));
         }
-        Mainframe::instance()->removeUser(mNickName);
-        Mainframe::instance()->updateChannels();
+        Mainframe::instance().removeUser(mNickName);
+        Mainframe::instance().updateChannels();
     }
 }
 
 void User::cmdNick(const std::string& newnick) {
     if(bSentNick) {
-        if(Mainframe::instance()->changeNickname(mNickName, newnick)) {
+        if(Mainframe::instance().changeNickname(mNickName, newnick)) {
             mSession->sendAsUser("NICK :"+ newnick + Config::EOFMessage);
             ChannelSet::iterator it = mChannels.begin();
             for(; it != mChannels.end(); ++it) {
@@ -35,7 +36,7 @@ void User::cmdNick(const std::string& newnick) {
 				+ Config::EOFMessage);
         }
     } else {
-        if(!Mainframe::instance()->doesNicknameExists(newnick)) {
+        if(!Mainframe::instance().doesNicknameExists(newnick)) {
             setNick(newnick);
             bSentNick = true;
         } else {
@@ -59,7 +60,7 @@ void User::cmdUser(const std::string& host, const std::string& realname) {
             mSession->sendAsServer(ToString(Response::Error::ERR_NONICKNAMEGIVEN) + " No nickname given, use NICK first !" + Config::EOFMessage);
             return;
         }
-        if(!Mainframe::instance()->addUser(this)) {
+        if(!Mainframe::instance().addUser(this->getPtr())) {
             mSession->sendAsServer(ToString(Response::Error::ERR_NICKCOLLISION) + " " 
 				+ mNickName + " This nickname is already used !" 
 				+ Config::EOFMessage);
@@ -84,11 +85,11 @@ void User::cmdQuit() {
         (*it)->broadcast(messageHeader() + "PART " 
 			+ (*it)->name() + " : Leave the channel" 
 			+ Config::EOFMessage);
-        (*it)->removeUser(this);
+        (*it)->removeUser(getPtr());
         //mChannels.erase((*it));
     }
-    Mainframe::instance()->removeUser(mNickName);
-    Mainframe::instance()->updateChannels();
+    Mainframe::instance().removeUser(mNickName);
+    Mainframe::instance().updateChannels();
     mSession->close();
     bProperlyQuit = true;
 }
@@ -97,18 +98,18 @@ void User::cmdPart(Channel* channel) {
     channel->broadcast(messageHeader() + "PART " 
 		+ channel->name() + " : Leave the channel" 
 		+ Config::EOFMessage);
-    channel->removeUser(this);
+    channel->removeUser(getPtr());
     mChannels.erase(channel);
-    Mainframe::instance()->updateChannels();
+    Mainframe::instance().updateChannels();
 }
 
 void User::cmdJoin(Channel* channel) {
     mSession->sendAsUser("JOIN " + channel->name() + Config::EOFMessage);
     mChannels.insert(channel);
-    channel->addUser(this);
+    channel->addUser(getPtr());
 }
 
-void User::cmdKick(User* victim, const std::string& reason, Channel* channel) {
+void User::cmdKick(UserPtr victim, const std::string& reason, Channel* channel) {
     channel->broadcast(":" + mNickName 
 		+ " KICK " + channel->name() + " " 
 		+ victim->nick() + " :" 
@@ -120,7 +121,7 @@ void User::cmdPing() {
     mSession->sendAsServer("PONG" + Config::EOFMessage);
 }
 
-Session*    User::session() const {
+SessionPtr User::session() const {
     return mSession;
 }
 

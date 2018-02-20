@@ -2,7 +2,7 @@
 #include "server.h"
 #include "mainframe.h"
 
-void Parser::parse(const std::string& message, User* user) {
+void Parser::parse(const std::string& message, User::UserPtr user) {
 	StrVec  split;
 	boost::split(split, message, boost::is_any_of(" \t"), boost::token_compress_on);
 	boost::to_upper(split[0]);
@@ -49,7 +49,7 @@ void Parser::parse(const std::string& message, User* user) {
 		if (split.size() < 2) return;
 		if ((split[1][0] != '#' && split[1][0] != '&') || split[1].size() < 2) return;
 
-		Channel* chan = Mainframe::instance()->getChannelByName(split[1]);
+		Channel* chan = Mainframe::instance().getChannelByName(split[1]);
 		if (chan) {
 			if (!chan->hasPass() || (split.size() >= 3 && split[2] == chan->password())) {
 				if (!chan->limited() || !chan->full()) {
@@ -73,7 +73,7 @@ void Parser::parse(const std::string& message, User* user) {
 			chan = new Channel(user, split[1]);
 			if (chan) {
 				user->cmdJoin(chan);
-				Mainframe::instance()->addChannel(chan);
+				Mainframe::instance().addChannel(chan);
 			}
 		}
 
@@ -81,14 +81,14 @@ void Parser::parse(const std::string& message, User* user) {
 
 	else if (split[0] == "PART") {
 		if (split.size() < 2) return;
-		Channel* chan = Mainframe::instance()->getChannelByName(split[1]);
+		Channel* chan = Mainframe::instance().getChannelByName(split[1]);
 		if (chan) user->cmdPart(chan);
 
 	}
 
 	else if (split[0] == "TOPIC") {
 		if (split.size() >= 2) {
-			Channel* chan = Mainframe::instance()->getChannelByName(split[1]);
+			Channel* chan = Mainframe::instance().getChannelByName(split[1]);
 			if (chan) {
 				if (split.size() == 2) {
 					if (chan->topic().empty()) {
@@ -128,7 +128,7 @@ void Parser::parse(const std::string& message, User* user) {
 			+ " " + user->nick()
 			+ " Channel :Users Name"
 			+ Config::EOFMessage);
-		ChannelMap channels = Mainframe::instance()->channels();
+		ChannelMap channels = Mainframe::instance().channels();
 		ChannelMap::iterator it = channels.begin();
 		for (; it != channels.end(); ++it) {
 			user->session()->sendAsServer(ToString(Response::Reply::RPL_LIST) + " "
@@ -151,7 +151,7 @@ void Parser::parse(const std::string& message, User* user) {
 		for (unsigned int i = 2; i < split.size(); ++i) { message += split[i] + " "; }
 
 		if (split[1][0] == '#' || split[1][0] == '&') {
-			Channel* chan = Mainframe::instance()->getChannelByName(split[1]);
+			Channel* chan = Mainframe::instance().getChannelByName(split[1]);
 			if (chan) {
 				chan->broadcast(":"
 					+ user->nick()
@@ -161,7 +161,7 @@ void Parser::parse(const std::string& message, User* user) {
 			}
 		}
 		else {
-			User* target = Mainframe::instance()->getUserByName(split[1]);
+			UserPtr target = Mainframe::instance().getUserByName(split[1]);
 			if (target) {
 				target->session()->send(":" + user->nick()
 					+ " PRIVMSG "
@@ -175,8 +175,8 @@ void Parser::parse(const std::string& message, User* user) {
 	else if (split[0] == "KICK") {
 		if (split.size() < 3) return;
 
-		Channel* chan = Mainframe::instance()->getChannelByName(split[1]);
-		User*  victim = Mainframe::instance()->getUserByName(split[2]);
+		Channel* chan = Mainframe::instance().getChannelByName(split[1]);
+		UserPtr  victim = Mainframe::instance().getUserByName(split[2]);
 		std::string reason = "";
 		if (chan && victim) {
 			for (unsigned int i = 3; i < split.size(); ++i) {

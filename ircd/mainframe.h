@@ -8,21 +8,22 @@
 #include "channel.h"
 
 
-typedef std::map<std::string, User*>    UserMap; 
+typedef std::map<std::string, UserPtr>    UserMap; 
 typedef std::map<std::string, Channel*> ChannelMap; 
 
 class Mainframe {
 
 public:
-
-        static Mainframe*   instance();
+		
+		~Mainframe();
+        static Mainframe&   instance();
 		void    start();
 		
 		bool    doesNicknameExists(const std::string& nick);
-        bool    addUser(User* user);
+        bool    addUser(UserPtr user);
 		void    removeUser(const std::string& nick);
 		bool    changeNickname(const std::string& old, const std::string& recent);
-        User*   getUserByName(const std::string& nick);
+        UserPtr   getUserByName(const std::string& nick);
 
         bool    doesChannelExists(const std::string& name);
         void    addChannel(Channel* chan);
@@ -35,13 +36,15 @@ public:
     private:
 
 		Mainframe() = default;
-        ~Mainframe(); 
-        Mainframe(const Mainframe&);
-		Mainframe& operator=(Mainframe&) {};
+
+		Mainframe(const Mainframe&) = delete;
+		Mainframe& operator=(const Mainframe&) = delete;
 
         void removeAllChannels();
 
-        static Mainframe* mInstance; 
+        static std::unique_ptr<Mainframe> mInstance;
+		static std::once_flag onceFlag;
+
         UserMap mUsers;
         ChannelMap mChannels;
 };

@@ -11,13 +11,15 @@
 #include "defines.h"
 #include "user.h"
 
+typedef boost::shared_ptr<User> UserPtr;
+
 class Session : public boost::enable_shared_from_this<Session> {
     
 public:
-        
-		typedef boost::shared_ptr<Session> pointer;
 
-        static pointer  create(boost::asio::io_service& io_service);
+        static SessionPtr create(boost::asio::io_service& io_service);
+		SessionPtr getPtr();
+
 		void start();
 
 		void sendAsServer(const std::string& message);
@@ -34,7 +36,8 @@ private:
 		void read();
 		void handleRead(const boost::system::error_code& error, std::size_t bytes);
 
-        User mUser;
+		boost::shared_ptr<User> mUser;
+
 		boost::asio::ip::tcp::socket mSocket;
         boost::asio::streambuf mBuffer;
         std::string mMessage;
