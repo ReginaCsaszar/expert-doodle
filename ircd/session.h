@@ -36,7 +36,7 @@ private:
 		void read();
 		void handleRead(const boost::system::error_code& error, std::size_t bytes);
 
-		boost::shared_ptr<User> mUser;
+		UserPtr mUser;
 
 		boost::asio::ip::tcp::socket mSocket;
         boost::asio::streambuf mBuffer;

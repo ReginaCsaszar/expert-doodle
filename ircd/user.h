@@ -13,7 +13,7 @@ typedef std::vector<std::string> StrVec;
 typedef std::set<Channel*> ChannelSet;
 typedef boost::shared_ptr<Session> SessionPtr;
 
-class User : public boost::enable_shared_from_this<User> {
+class User {
 
     friend class Session;
 
@@ -21,10 +21,12 @@ public:
 
 	typedef boost::shared_ptr<User> UserPtr;
 
-        User(Session* mysession);
+        User();
         ~User();
 
-		UserPtr getPtr() { return shared_from_this(); }
+		UserPtr getPtr() { return myself; }
+		void setUserPtr(const UserPtr& myptr) { myself = myptr; }
+		void setSessionPtr(const SessionPtr& sessionptr) { mSession = sessionptr; }
 
         void cmdNick(const std::string& newnick);
         void cmdUser(const std::string& host, const std::string& realname);
@@ -47,6 +49,7 @@ public:
 private:
 
 		SessionPtr mSession;
+		UserPtr myself;
 
         std::string mRealName;
         std::string  mNickName;

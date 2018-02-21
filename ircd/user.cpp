@@ -3,8 +3,8 @@
 #include "mainframe.h"
 
 
-User::User(Session* mysession)
-:   mSession(mysession->shared_from_this()), bSentUser(false), bSentNick(false), bSentMotd(false), bProperlyQuit(false) {}
+User::User()
+:   mSession(nullptr), bSentUser(false), bSentNick(false), bSentMotd(false), bProperlyQuit(false) {}
 
 User::~User() {
     if(!bProperlyQuit) {
