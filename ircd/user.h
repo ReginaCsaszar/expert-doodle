@@ -24,8 +24,6 @@ public:
         User();
         ~User();
 
-		UserPtr getPtr() { return myself; }
-		void setUserPtr(const UserPtr& myptr) { myself = myptr; }
 		void setSessionPtr(const SessionPtr& sessionptr) { mSession = sessionptr; }
 
         void cmdNick(const std::string& newnick);
@@ -49,7 +47,6 @@ public:
 private:
 
 		SessionPtr mSession;
-		UserPtr myself;
 
         std::string mRealName;
         std::string  mNickName;

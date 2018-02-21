@@ -18,7 +18,9 @@ class Session : public boost::enable_shared_from_this<Session> {
 public:
 
         static SessionPtr create(boost::asio::io_service& io_service);
+		
 		SessionPtr getPtr();
+		UserPtr getUser() { return mUser; }
 
 		void start();
 

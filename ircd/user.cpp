@@ -10,7 +10,7 @@ User::~User() {
     if(!bProperlyQuit) {
         ChannelSet::iterator it = mChannels.begin();
         for(; it != mChannels.end(); ++it) {
-            (*it)->removeUser(getPtr());
+            (*it)->removeUser(mSession->getUser());
             (*it)->broadcast(messageHeader() + "PART " + (*it)->name() + " :Leave the channel" + Config::EOFMessage);
             mChannels.erase((*it));
         }
@@ -60,7 +60,7 @@ void User::cmdUser(const std::string& host, const std::string& realname) {
             mSession->sendAsServer(ToString(Response::Error::ERR_NONICKNAMEGIVEN) + " No nickname given, use NICK first !" + Config::EOFMessage);
             return;
         }
-        if(!Mainframe::instance().addUser(this->getPtr())) {
+        if(!Mainframe::instance().addUser(mSession->getUser())) {
             mSession->sendAsServer(ToString(Response::Error::ERR_NICKCOLLISION) + " " 
 				+ mNickName + " This nickname is already used !" 
 				+ Config::EOFMessage);
@@ -85,7 +85,7 @@ void User::cmdQuit() {
         (*it)->broadcast(messageHeader() + "PART " 
 			+ (*it)->name() + " : Leave the channel" 
 			+ Config::EOFMessage);
-        (*it)->removeUser(getPtr());
+        (*it)->removeUser(mSession->getUser());
         //mChannels.erase((*it));
     }
     Mainframe::instance().removeUser(mNickName);
@@ -98,7 +98,7 @@ void User::cmdPart(Channel* channel) {
     channel->broadcast(messageHeader() + "PART " 
 		+ channel->name() + " : Leave the channel" 
 		+ Config::EOFMessage);
-    channel->removeUser(getPtr());
+    channel->removeUser(mSession->getUser());
     mChannels.erase(channel);
     Mainframe::instance().updateChannels();
 }
@@ -106,7 +106,7 @@ void User::cmdPart(Channel* channel) {
 void User::cmdJoin(Channel* channel) {
     mSession->sendAsUser("JOIN " + channel->name() + Config::EOFMessage);
     mChannels.insert(channel);
-    channel->addUser(getPtr());
+    channel->addUser(mSession->getUser());
 }
 
 void User::cmdKick(UserPtr victim, const std::string& reason, Channel* channel) {

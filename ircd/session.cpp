@@ -5,7 +5,6 @@ Session::Session(boost::asio::io_service& io_service)
 :  mUser(new(User)), mSocket(io_service)
 {
 	mUser->setSessionPtr(getPtr());
-	mUser->setUserPtr(mUser);
 }
 
 SessionPtr Session::create(boost::asio::io_service& io_service) {
