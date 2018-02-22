@@ -11,10 +11,8 @@ User::~User() {
         for(; it != mChannels.end(); ++it) {
             (*it)->removeUser(this);
             (*it)->broadcast(messageHeader() + "PART " + (*it)->name() + " :Leave the channel" + Config::EOFMessage);
-            mChannels.erase((*it));
         }
         Mainframe::instance()->removeUser(mNickName);
-        Mainframe::instance()->updateChannels();
     }
 }
 
@@ -81,25 +79,17 @@ void User::cmdUser(const std::string& host, const std::string& realname) {
 void User::cmdQuit() {
     ChannelSet::iterator it = mChannels.begin();
     for(; it != mChannels.end(); ++it) {
-        (*it)->broadcast(messageHeader() + "PART " 
-			+ (*it)->name() + " : Leave the channel" 
-			+ Config::EOFMessage);
-        (*it)->removeUser(this);
-        //mChannels.erase((*it));
+		cmdPart(*it);
     }
     Mainframe::instance()->removeUser(mNickName);
-    Mainframe::instance()->updateChannels();
     mSession->close();
     bProperlyQuit = true;
 }
 
 void User::cmdPart(Channel* channel) {
-    channel->broadcast(messageHeader() + "PART " 
-		+ channel->name() + " : Leave the channel" 
-		+ Config::EOFMessage);
+    channel->broadcast(messageHeader() + "PART " + channel->name() + " : Leave the channel" + Config::EOFMessage);
     channel->removeUser(this);
     mChannels.erase(channel);
-    Mainframe::instance()->updateChannels();
 }
 
 void User::cmdJoin(Channel* channel) {
@@ -109,11 +99,7 @@ void User::cmdJoin(Channel* channel) {
 }
 
 void User::cmdKick(User* victim, const std::string& reason, Channel* channel) {
-    channel->broadcast(":" + mNickName 
-		+ " KICK " + channel->name() + " " 
-		+ victim->nick() + " :" 
-		+ reason 
-		+ Config::EOFMessage);
+    channel->broadcast(":" + mNickName + " KICK " + channel->name() + " " + victim->nick() + " :" + reason + Config::EOFMessage);
 }
 
 void User::cmdPing() {

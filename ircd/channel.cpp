@@ -28,11 +28,10 @@ void Channel::addUser(User* user) {
 }
 
 void Channel::removeUser(User* user) {
-    if(user) {
-        mUsers.erase(user);
-        mOperators.erase(user);
-        sendUserList(); 
-    }
+	if (!user) return; 
+	if (hasUser(user))  mUsers.erase(user);
+	if (isOperator(user)) mOperators.erase(user);
+    sendUserList(); 
 }
 
 bool Channel::hasUser(User* user) { return ((mUsers.find(user)) != mUsers.end()); }

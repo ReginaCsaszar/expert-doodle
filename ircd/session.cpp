@@ -16,7 +16,7 @@ void Session::start() {
 }
 
 void Session::close() {
-     mSocket.cancel();
+    mSocket.cancel();
     mSocket.shutdown(boost::asio::ip::tcp::socket::shutdown_both);
 }
 

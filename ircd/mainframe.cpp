@@ -71,15 +71,14 @@ void Mainframe::removeAllChannels() {
     }
 }
 
-void Mainframe::updateChannels() {
+/*void Mainframe::updateChannels() {
     ChannelMap::iterator it = mChannels.begin();
-    while(it != mChannels.end()) {
+	for (; it != mChannels.end(); ++it) {
         if(it->second->empty()) {
             delete (it->second);
             mChannels.erase(it);
-        }
-         it++;
+        }    
      }
-}
+}*/
 
 ChannelMap Mainframe::channels() const { return mChannels; }

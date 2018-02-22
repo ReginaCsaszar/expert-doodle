@@ -29,7 +29,7 @@ public:
         void    removeChannel(const std::string& name);
 
         Channel* getChannelByName(const std::string& name);
-        void    updateChannels();
+        //void    updateChannels();
         ChannelMap channels() const;
 
     private:
