@@ -1,13 +1,9 @@
 #include "mainframe.h"
 
-std::unique_ptr<Mainframe> Mainframe::mInstance;;
-std::once_flag Mainframe::onceFlag;
+Mainframe Mainframe::mInstance;
 
 Mainframe& Mainframe::instance() {
-	std::call_once(Mainframe::onceFlag, []() {
-		mInstance.reset(new Mainframe);
-	});
-	return *(mInstance.get());
+	return mInstance;
 }
 
 Mainframe::~Mainframe() {
@@ -53,7 +49,7 @@ bool Mainframe::doesChannelExists(const std::string& name) {
     return ((mChannels.find(name)) != mChannels.end());
 }
 
-void Mainframe::addChannel(Channel* chan) {
+void Mainframe::addChannel(ChPtr chan) {
     std::string channame = chan->name();
     if(!doesChannelExists(channame)) {
         mChannels[channame] = chan;
@@ -62,15 +58,15 @@ void Mainframe::addChannel(Channel* chan) {
 
 void Mainframe::removeChannel(const std::string& name) { mChannels.erase(name); }
 
-Channel* Mainframe::getChannelByName(const std::string& name) {
-    if(!doesChannelExists(name))    return NULL;
+ChPtr Mainframe::getChannelByName(const std::string& name) {
+    if(!doesChannelExists(name))    return nullptr;
     return mChannels[name];
 }
 
 void Mainframe::removeAllChannels() {
     ChannelMap::iterator it = mChannels.begin();
     for(; it != mChannels.end(); ++it) {
-        delete (it->second);
+        (it->second).reset();
     }
 }
 
@@ -78,7 +74,7 @@ void Mainframe::updateChannels() {
     ChannelMap::iterator it = mChannels.begin();
     while(it != mChannels.end()) {
         if(it->second->empty()) {
-            delete (it->second);
+            (it->second).reset();
             mChannels.erase(it);
         }
          it++;

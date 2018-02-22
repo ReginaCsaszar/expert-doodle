@@ -5,12 +5,12 @@
 #include <string>
 #include <vector>
 #include <set>
-
-class Session;
-class Channel;
+#include "channel.h"
+#include "session.h"
+#include "mainframe.h"
 
 typedef std::vector<std::string> StrVec;
-typedef std::set<Channel*> ChannelSet;
+typedef std::set<ChPtr> ChannelSet;
 typedef boost::shared_ptr<Session> SessionPtr;
 
 class User {
@@ -29,9 +29,9 @@ public:
         void cmdNick(const std::string& newnick);
         void cmdUser(const std::string& host, const std::string& realname);
 		void cmdQuit();
-        void cmdJoin(Channel* channel);
-        void cmdPart(Channel* channel);
-        void cmdKick(UserPtr victim, const std::string& reason, Channel* channel);
+        void cmdJoin(ChPtr channel);
+        void cmdPart(ChPtr channel);
+        void cmdKick(UserPtr victim, const std::string& reason, ChPtr channel);
         void cmdPing();
 
 		SessionPtr session() const;

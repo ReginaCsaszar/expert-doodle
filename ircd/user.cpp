@@ -1,7 +1,4 @@
 #include "user.h"
-#include "session.h"
-#include "mainframe.h"
-
 
 User::User()
 :   mSession(nullptr), bSentUser(false), bSentNick(false), bSentMotd(false), bProperlyQuit(false) {}
@@ -30,40 +27,28 @@ void User::cmdNick(const std::string& newnick) {
             }
             setNick(newnick);
         } else {
-            mSession->sendAsServer(ToString(Response::Error::ERR_NICKCOLLISION) + " " 
-				+ mNickName + " " 
-				+ newnick + " :Nickname is already in use." 
-				+ Config::EOFMessage);
+            mSession->sendAsServer(ToString(Response::Error::ERR_NICKCOLLISION) + " " + mNickName + " " + newnick + " :Nickname is already in use." + Config::EOFMessage);
         }
     } else {
         if(!Mainframe::instance().doesNicknameExists(newnick)) {
             setNick(newnick);
             bSentNick = true;
         } else {
-            mSession->sendAsServer(ToString(Response::Error::ERR_NICKCOLLISION) + " " 
-				+ mNickName + " " 
-				+ newnick 
-				+ " :Nickname is already in use." 
-				+ Config::EOFMessage);
+            mSession->sendAsServer(ToString(Response::Error::ERR_NICKCOLLISION) + " " + mNickName + " " + newnick + " :Nickname is already in use." + Config::EOFMessage);
         }
     }
 }
 
 void User::cmdUser(const std::string& host, const std::string& realname) {
     if(bSentUser) {
-        mSession->sendAsServer(ToString(Response::Error::ERR_ALREADYREGISTRED) + " " 
-			+ mNickName 
-			+ " You are already registered !" 
-			+ Config::EOFMessage);
+        mSession->sendAsServer(ToString(Response::Error::ERR_ALREADYREGISTRED) + " " + mNickName + " You are already registered !" + Config::EOFMessage);
     } else {
         if(!bSentNick) {
             mSession->sendAsServer(ToString(Response::Error::ERR_NONICKNAMEGIVEN) + " No nickname given, use NICK first !" + Config::EOFMessage);
             return;
         }
         if(!Mainframe::instance().addUser(mSession->getUser())) {
-            mSession->sendAsServer(ToString(Response::Error::ERR_NICKCOLLISION) + " " 
-				+ mNickName + " This nickname is already used !" 
-				+ Config::EOFMessage);
+            mSession->sendAsServer(ToString(Response::Error::ERR_NICKCOLLISION) + " " + mNickName + " This nickname is already used !"	+ Config::EOFMessage);
             return;
         }
         mHost = mSession->ip();
@@ -82,9 +67,7 @@ void User::cmdUser(const std::string& host, const std::string& realname) {
 void User::cmdQuit() {
     ChannelSet::iterator it = mChannels.begin();
     for(; it != mChannels.end(); ++it) {
-        (*it)->broadcast(messageHeader() + "PART " 
-			+ (*it)->name() + " : Leave the channel" 
-			+ Config::EOFMessage);
+        (*it)->broadcast(messageHeader() + "PART " + (*it)->name() + " : Leave the channel" + Config::EOFMessage);
         (*it)->removeUser(mSession->getUser());
         //mChannels.erase((*it));
     }
@@ -94,27 +77,21 @@ void User::cmdQuit() {
     bProperlyQuit = true;
 }
 
-void User::cmdPart(Channel* channel) {
-    channel->broadcast(messageHeader() + "PART " 
-		+ channel->name() + " : Leave the channel" 
-		+ Config::EOFMessage);
+void User::cmdPart(ChPtr channel) {
+    channel->broadcast(messageHeader() + "PART " + channel->name() + " : Leave the channel" + Config::EOFMessage);
     channel->removeUser(mSession->getUser());
     mChannels.erase(channel);
     Mainframe::instance().updateChannels();
 }
 
-void User::cmdJoin(Channel* channel) {
+void User::cmdJoin(ChPtr channel) {
     mSession->sendAsUser("JOIN " + channel->name() + Config::EOFMessage);
     mChannels.insert(channel);
     channel->addUser(mSession->getUser());
 }
 
-void User::cmdKick(UserPtr victim, const std::string& reason, Channel* channel) {
-    channel->broadcast(":" + mNickName 
-		+ " KICK " + channel->name() + " " 
-		+ victim->nick() + " :" 
-		+ reason 
-		+ Config::EOFMessage);
+void User::cmdKick(UserPtr victim, const std::string& reason, ChPtr channel) {
+    channel->broadcast(":" + mNickName + " KICK " + channel->name() + " " + victim->nick() + " :" + reason + Config::EOFMessage);
 }
 
 void User::cmdPing() {
