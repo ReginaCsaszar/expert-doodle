@@ -79,7 +79,8 @@ void User::cmdUser(const std::string& host, const std::string& realname) {
 void User::cmdQuit() {
     ChannelSet::iterator it = mChannels.begin();
     for(; it != mChannels.end(); ++it) {
-		cmdPart(*it);
+		(*it)->broadcast(messageHeader() + "PART " + (*it)->name() + " : Leave the channel" + Config::EOFMessage);
+		(*it)->removeUser(this);
     }
     Mainframe::instance()->removeUser(mNickName);
     mSession->close();
